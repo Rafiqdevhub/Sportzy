@@ -14,7 +14,7 @@ app.use(express.json());
 const server = http.createServer(app);
 
 app.get("/", (req, res) => {
-  res.json({ message: "Sportzy API is running." });
+  res.json({ message: "Sportzy Backend is running!" });
 });
 
 app.use(securityMiddleware());
