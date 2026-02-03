@@ -6,6 +6,7 @@ import { matchRouter } from "./routes/matchRoute.js";
 import { attachWebSocketServer } from "./ws/server.js";
 import { securityMiddleware } from "./arcjet.js";
 import { CORS_ORIGIN, HOST, PORT } from "./config/index.js";
+import { apiLogger, logger } from "./middleware/logger.js";
 
 const app = express();
 
@@ -15,13 +16,16 @@ app.use(
     origin: CORS_ORIGIN,
   }),
 );
+
+app.use(apiLogger());
+
 const server = http.createServer(app);
 
 app.get("/", (req, res) => {
   res.json({ message: "Sportzy Backend is running!" });
 });
 
-app.use(securityMiddleware());
+// app.use(securityMiddleware());
 
 app.use("/matches", matchRouter);
 app.use("/matches/:id/commentary", commentaryRouter);
@@ -34,8 +38,9 @@ app.locals.broadcastCommentary = broadcastCommentary;
 server.listen(PORT, HOST, () => {
   const baseUUrl =
     HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
-  console.log(`Server is running at ${baseUUrl}`);
-  console.log(
+  logger.success(`Server is running at ${baseUUrl}`);
+  logger.info(
     `Websocket Server is runing on ${baseUUrl.replace("http", "ws")}/ws`,
   );
+  logger.info("API Logger is active - all requests will be tracked");
 });

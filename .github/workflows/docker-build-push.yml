@@ -6,20 +6,25 @@ on:
       - main
       - master
       - develop
-      - feat/arcjet
-      - feat/cofig-file
-      - feat/database-schema
       - feat/dockerize-app
-      - feat/matches-endpoints
-      - feat/publishSubscribe
-      - feat/seed-data
-      - feat/websocket-server
     tags:
       - "v*.*.*"
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/docker-build-push.yml"
+      - "src/**"
+      - "package*.json"
+      - "drizzle/**"
   pull_request:
     branches:
       - main
       - master
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/docker-build-push.yml"
+      - "src/**"
+      - "package*.json"
+      - "drizzle/**"
   workflow_dispatch:
 
 env:
