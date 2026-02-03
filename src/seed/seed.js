@@ -160,17 +160,17 @@ async function insertCommentary(matchId, entry) {
     method: "POST",
     headers: { "content-type": "application/json" },
     // NOTE: Avoid sending nulls; the API expects missing optional fields.
-    // body: JSON.stringify({
-    //   minute: entry.minute ?? null,
-    //   sequence: entry.sequence ?? null,
-    //   period: entry.period ?? null,
-    //   eventType: entry.eventType ?? null,
-    //   actor: entry.actor ?? null,
-    //   team: entry.team ?? null,
-    //   message: entry.message ?? "Update",
-    //   metadata: entry.metadata ?? null,
-    //   tags: entry.tags ?? null,
-    // }),
+    body: JSON.stringify({
+      minute: entry.minute ?? null,
+      sequence: entry.sequence ?? null,
+      period: entry.period ?? null,
+      eventType: entry.eventType ?? null,
+      actor: entry.actor ?? null,
+      team: entry.team ?? null,
+      message: entry.message ?? "Update",
+      metadata: entry.metadata ?? null,
+      tags: entry.tags ?? null,
+    }),
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
@@ -182,63 +182,63 @@ async function insertCommentary(matchId, entry) {
 
 // NOTE: Score delta logic is commented out because this codebase
 // does not expose score update endpoints.
-// function extractRuns(entry) {
-//   if (Number.isFinite(entry.runs)) {
-//     return entry.runs;
-//   }
-//   if (entry.metadata && Number.isFinite(entry.metadata.runs)) {
-//     return entry.metadata.runs;
-//   }
-//   if (entry.eventType === "four") {
-//     return 4;
-//   }
-//   if (entry.eventType === "six") {
-//     return 6;
-//   }
-//   if (entry.eventType === "run") {
-//     return 1;
-//   }
-//   return null;
-// }
-//
-// function scoreDeltaFromEntry(entry, match) {
-//   if (entry.scoreDelta && typeof entry.scoreDelta === "object") {
-//     return {
-//       home: Number(entry.scoreDelta.home || 0),
-//       away: Number(entry.scoreDelta.away || 0),
-//     };
-//   }
-//
-//   if (entry.eventType === "goal") {
-//     if (entry.team === match.homeTeam) {
-//       return { home: 1, away: 0 };
-//     }
-//     if (entry.team === match.awayTeam) {
-//       return { home: 0, away: 1 };
-//     }
-//   }
-//
-//   const runs = extractRuns(entry);
-//   if (runs !== null) {
-//     if (entry.team === match.homeTeam) {
-//       return { home: runs, away: 0 };
-//     }
-//     if (entry.team === match.awayTeam) {
-//       return { home: 0, away: runs };
-//     }
-//   }
-//
-//   return null;
-// }
-//
-// function fakeScoreDelta(matchState) {
-//   const nextSide = matchState.fakeNext === "home" ? "away" : "home";
-//   matchState.fakeNext = nextSide;
-//   const points = 1;
-//   return nextSide === "home"
-//     ? { home: points, away: 0 }
-//     : { home: 0, away: points };
-// }
+function extractRuns(entry) {
+  if (Number.isFinite(entry.runs)) {
+    return entry.runs;
+  }
+  if (entry.metadata && Number.isFinite(entry.metadata.runs)) {
+    return entry.metadata.runs;
+  }
+  if (entry.eventType === "four") {
+    return 4;
+  }
+  if (entry.eventType === "six") {
+    return 6;
+  }
+  if (entry.eventType === "run") {
+    return 1;
+  }
+  return null;
+}
+
+function scoreDeltaFromEntry(entry, match) {
+  if (entry.scoreDelta && typeof entry.scoreDelta === "object") {
+    return {
+      home: Number(entry.scoreDelta.home || 0),
+      away: Number(entry.scoreDelta.away || 0),
+    };
+  }
+
+  if (entry.eventType === "goal") {
+    if (entry.team === match.homeTeam) {
+      return { home: 1, away: 0 };
+    }
+    if (entry.team === match.awayTeam) {
+      return { home: 0, away: 1 };
+    }
+  }
+
+  const runs = extractRuns(entry);
+  if (runs !== null) {
+    if (entry.team === match.homeTeam) {
+      return { home: runs, away: 0 };
+    }
+    if (entry.team === match.awayTeam) {
+      return { home: 0, away: runs };
+    }
+  }
+
+  return null;
+}
+
+function fakeScoreDelta(matchState) {
+  const nextSide = matchState.fakeNext === "home" ? "away" : "home";
+  matchState.fakeNext = nextSide;
+  const points = 1;
+  return nextSide === "home"
+    ? { home: points, away: 0 }
+    : { home: 0, away: points };
+}
 
 function inningsRank(period) {
   if (!period) {
@@ -275,28 +275,28 @@ function cricketBattingTeam(entry, match) {
   return null;
 }
 
-// function cricketScoreDelta(entry, match) {
-//   const battingTeam = cricketBattingTeam(entry, match);
-//   let delta = scoreDeltaFromEntry(entry, match);
-//   if (!delta) {
-//     if (!battingTeam) {
-//       return null;
-//     }
-//     const points = 1;
-//     return battingTeam === match.homeTeam
-//       ? { home: points, away: 0 }
-//       : { home: 0, away: points };
-//   }
-//
-//   if (!battingTeam) {
-//     return delta;
-//   }
-//
-//   if (battingTeam === match.homeTeam) {
-//     return { home: delta.home, away: 0 };
-//   }
-//   return { home: 0, away: delta.away };
-// }
+function cricketScoreDelta(entry, match) {
+  const battingTeam = cricketBattingTeam(entry, match);
+  let delta = scoreDeltaFromEntry(entry, match);
+  if (!delta) {
+    if (!battingTeam) {
+      return null;
+    }
+    const points = 1;
+    return battingTeam === match.homeTeam
+      ? { home: points, away: 0 }
+      : { home: 0, away: points };
+  }
+
+  if (!battingTeam) {
+    return delta;
+  }
+
+  if (battingTeam === match.homeTeam) {
+    return { home: delta.home, away: 0 };
+  }
+  return { home: 0, away: delta.away };
+}
 
 function normalizeCricketFeed(entries, match) {
   const sorted = [...entries].sort((a, b) => {
@@ -495,16 +495,16 @@ function getMatchEntry(entry, matchMap) {
 }
 
 // NOTE: Score updates are not part of this codebase yet.
-// async function updateMatchScore(matchId, homeScore, awayScore) {
-//   const response = await fetch(`${API_URL}/matches/${matchId}/score`, {
-//     method: "PATCH",
-//     headers: { "content-type": "application/json" },
-//     body: JSON.stringify({ homeScore, awayScore }),
-//   });
-//   if (!response.ok) {
-//     throw new Error(`Failed to update score: ${response.status}`);
-//   }
-// }
+async function updateMatchScore(matchId, homeScore, awayScore) {
+  const response = await fetch(`${API_URL}/matches/${matchId}/score`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ homeScore, awayScore }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update score: ${response.status}`);
+  }
+}
 
 function randomMatchDelay() {
   const range = NEW_MATCH_DELAY_MAX_MS - NEW_MATCH_DELAY_MIN_MS;
@@ -512,15 +512,15 @@ function randomMatchDelay() {
 }
 
 // NOTE: Match status updates are not part of this codebase yet.
-// async function endMatch(matchId) {
-//   const response = await fetch(`${API_URL}/matches/${matchId}/end`, {
-//     method: "PATCH",
-//     headers: { "content-type": "application/json" },
-//   });
-//   if (!response.ok) {
-//     throw new Error(`Failed to end match: ${response.status}`);
-//   }
-// }
+async function endMatch(matchId) {
+  const response = await fetch(`${API_URL}/matches/${matchId}/end`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to end match: ${response.status}`);
+  }
+}
 
 async function seed() {
   console.log(`📡 Seeding via API: ${API_URL}`);
@@ -575,31 +575,31 @@ async function seed() {
   }
 
   // NOTE: Score resets are disabled because score updates are not supported.
-  // const resetIds = new Set();
-  // for (const entry of matchMap.values()) {
-  //   const matchId = entry.match?.id;
-  //   if (!Number.isInteger(matchId) || resetIds.has(matchId)) {
-  //     continue;
-  //   }
-  //   resetIds.add(matchId);
-  //   entry.score.home = 0;
-  //   entry.score.away = 0;
-  //   await updateMatchScore(matchId, 0, 0);
-  // }
+  const resetIds = new Set();
+  for (const entry of matchMap.values()) {
+    const matchId = entry.match?.id;
+    if (!Number.isInteger(matchId) || resetIds.has(matchId)) {
+      continue;
+    }
+    resetIds.add(matchId);
+    entry.score.home = 0;
+    entry.score.away = 0;
+    await updateMatchScore(matchId, 0, 0);
+  }
 
   const expandedFeed = expandFeedForMatches(feed, seedMatches);
   const randomizedFeed = buildRandomizedFeed(expandedFeed, matchMap);
   // NOTE: Remaining entry counts were used to end matches; disabled for now.
-  // const remainingByMatchId = new Map();
-  // for (const entry of randomizedFeed) {
-  //   if (!Number.isInteger(entry.matchId)) {
-  //     continue;
-  //   }
-  //   remainingByMatchId.set(
-  //     entry.matchId,
-  //     (remainingByMatchId.get(entry.matchId) || 0) + 1,
-  //   );
-  // }
+  const remainingByMatchId = new Map();
+  for (const entry of randomizedFeed) {
+    if (!Number.isInteger(entry.matchId)) {
+      continue;
+    }
+    remainingByMatchId.set(
+      entry.matchId,
+      (remainingByMatchId.get(entry.matchId) || 0) + 1,
+    );
+  }
 
   for (let i = 0; i < randomizedFeed.length; i += 1) {
     const entry = randomizedFeed[i];
@@ -617,30 +617,30 @@ async function seed() {
     console.log(`📣 [Match ${match.id}] ${row.message}`);
 
     // NOTE: Score updates are intentionally disabled in this codebase.
-    // const isCricket = String(match.sport).toLowerCase() === "cricket";
-    // const delta = isCricket
-    //   ? cricketScoreDelta(entry, match, target)
-    //   : (scoreDeltaFromEntry(entry, match) ?? fakeScoreDelta(target));
-    // if (delta) {
-    //   target.score.home += delta.home;
-    //   target.score.away += delta.away;
-    //   await updateMatchScore(match.id, target.score.home, target.score.away);
-    //   console.log(
-    //     `📊 [Match ${match.id}] Score updated: ${target.score.home}-${target.score.away}`,
-    //   );
-    // }
+    const isCricket = String(match.sport).toLowerCase() === "cricket";
+    const delta = isCricket
+      ? cricketScoreDelta(entry, match, target)
+      : (scoreDeltaFromEntry(entry, match) ?? fakeScoreDelta(target));
+    if (delta) {
+      target.score.home += delta.home;
+      target.score.away += delta.away;
+      await updateMatchScore(match.id, target.score.home, target.score.away);
+      console.log(
+        `📊 [Match ${match.id}] Score updated: ${target.score.home}-${target.score.away}`,
+      );
+    }
 
     // NOTE: Match status updates are intentionally disabled in this codebase.
-    // if (Number.isInteger(entry.matchId)) {
-    //   const remaining = (remainingByMatchId.get(entry.matchId) || 1) - 1;
-    //   if (remaining <= 0) {
-    //     remainingByMatchId.delete(entry.matchId);
-    //     await endMatch(match.id);
-    //     console.log(`🏁 [Match ${match.id}] Match finished.`);
-    //   } else {
-    //     remainingByMatchId.set(entry.matchId, remaining);
-    //   }
-    // }
+    if (Number.isInteger(entry.matchId)) {
+      const remaining = (remainingByMatchId.get(entry.matchId) || 1) - 1;
+      if (remaining <= 0) {
+        remainingByMatchId.delete(entry.matchId);
+        await endMatch(match.id);
+        console.log(`🏁 [Match ${match.id}] Match finished.`);
+      } else {
+        remainingByMatchId.set(entry.matchId, remaining);
+      }
+    }
 
     if (DELAY_MS > 0) {
       await new Promise((resolve) => setTimeout(resolve, DELAY_MS));

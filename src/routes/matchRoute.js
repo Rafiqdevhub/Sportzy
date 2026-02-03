@@ -2,15 +2,25 @@ import { Router } from "express";
 import {
   createMatchSchema,
   listMatchesQuerySchema,
+  matchIdParamSchema,
+  updateScoreSchema,
+  MATCH_STATUS,
 } from "../validation/matches.js";
 import { matches } from "../db/schema.js";
 import { db } from "../db/db.js";
-import { getMatchStatus } from "../utils/matchStatus.js";
-import { desc } from "drizzle-orm";
+import { getMatchStatus, syncMatchStatus } from "../utils/matchStatus.js";
+import { desc, eq } from "drizzle-orm";
 
 export const matchRouter = Router();
 
 const MAX_LIMIT = 100;
+
+function formatZodError(error) {
+  return error.issues.map((issue) => ({
+    path: issue.path.join("."),
+    message: issue.message,
+  }));
+}
 
 matchRouter.get("/", async (req, res) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
@@ -77,22 +87,18 @@ matchRouter.post("/", async (req, res) => {
 matchRouter.patch("/:id/score", async (req, res) => {
   const paramsParsed = matchIdParamSchema.safeParse(req.params);
   if (!paramsParsed.success) {
-    return res
-      .status(400)
-      .json({
-        error: "Invalid match id",
-        details: formatZodError(paramsParsed.error),
-      });
+    return res.status(400).json({
+      error: "Invalid match id",
+      details: formatZodError(paramsParsed.error),
+    });
   }
 
   const bodyParsed = updateScoreSchema.safeParse(req.body);
   if (!bodyParsed.success) {
-    return res
-      .status(400)
-      .json({
-        error: "Invalid payload",
-        details: formatZodError(bodyParsed.error),
-      });
+    return res.status(400).json({
+      error: "Invalid payload",
+      details: formatZodError(bodyParsed.error),
+    });
   }
 
   const matchId = paramsParsed.data.id;
